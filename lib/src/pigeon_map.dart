@@ -5,10 +5,10 @@ class _PigeonMapInvocation extends Invocation {
   var _memberName, _positionalArguments;
   _PigeonMapInvocation(this._memberName, this._positionalArguments);
   final isMethod=false;
-  bool get isGetter => _positionalArguments.length==0; 
+  bool get isGetter => _positionalArguments.length==0;
   bool get isSetter => _positionalArguments.length>0;
-  Symbol get memberName => _memberName; 
-  Map<Symbol, dynamic> get namedArguments => _emptyMap; 
+  Symbol get memberName => _memberName;
+  Map<Symbol, dynamic> get namedArguments => _emptyMap;
   List get positionalArguments => _positionalArguments;
 }
 
@@ -17,8 +17,8 @@ class NameSet {
   List<String> _names;
   int _shift;
   int _searchMode = _HASH;
-  Int8List _table; 
-  
+  Int8List _table;
+
   NameSet(List<String> names) {
     _names=new List<String>.from(names, growable: false);
     _names.sort((a, b) => a.compareTo(b));
@@ -38,7 +38,7 @@ class NameSet {
   }
   // the goal is to find a way to produce unique small hash codes for keys
   // small hash code should be in the range [0..2^k-1]
-  // I'm trying first to form small hash code from bits 0..k-1 of real hash code 
+  // I'm trying first to form small hash code from bits 0..k-1 of real hash code
   // If they are not unique, trying bits 1..k, etc. If I fail after 16 iterations (unlikely)
   // I try bigger k. In total, 32 attempts are made. The probability of not finding unique
   // mapping overall is ~1/10000 (found experimentally)
@@ -65,8 +65,8 @@ class NameSet {
   int _getIndex(String key) {
     int n = _searchMode == _HASH ? _table[(key.hashCode >> _shift)&(_table.length-1)] :
             _searchMode == _LINEAR ? _getIndexByLinearSearch(key) :
-            _getIndexByBinarySearch(key);  
-    // fast track for identical makes things faster in typical case 
+            _getIndexByBinarySearch(key);
+    // fast track for identical makes things faster in typical case
     return n>=0 && (identical(_names[n], key) || _names[n] == key) ? n : -1;
   }
   int _getIndexByBinarySearch(String key) {
@@ -106,9 +106,9 @@ class PigeonMap implements Map<String, dynamic> {
     else {
       _values = new List(_nameSet.length);
       _values.setRange(0, _values.length, defaultValues, 0);
-      
-    }  
-    
+
+    }
+
   }
   _keyError(key) => throw new ArgumentError("name '$key' is not in the NameSet");
   get nameSet => _nameSet;
@@ -123,7 +123,7 @@ class PigeonMap implements Map<String, dynamic> {
     int n = _nameSet._getIndex(key);
     if (n<0) return noSuchAttribute(new _PigeonMapInvocation(new Symbol(key), []));
     var v = _values[n];
-    
+
     return identical(v, _undefined) ? null :v;
   }
 
@@ -133,12 +133,12 @@ class PigeonMap implements Map<String, dynamic> {
   }
 
   void addAll(Map<String, dynamic> other) => other.forEach((k, v) => this[k] = v);
-  
+
   void clear() {
     _values.fillRange(0, _values.length, _undefined);
     _length = -1;
   }
-  
+
 
   bool containsValue(Object value) {
     return _values.indexOf(value) >= 0;
@@ -151,24 +151,24 @@ class PigeonMap implements Map<String, dynamic> {
       if (!identical(v, _undefined)) {
         if (v is DateTime && jsonStringifyInEffect>0) v=v.toString();
         f(names[i],v);
-      }  
-    }    
+      }
+    }
   }
 
   bool get isEmpty => length == 0;
-  
+
   bool get isNotEmpty => length != 0;
-  Iterable<String> get keys { 
+  Iterable<String> get keys {
     var filtered = <String>[];
     var names=_nameSet._names;
     for (int i=0; i<_values.length; i++) {
       if (!identical(_values[i], _undefined))
         filtered.add(names[i]);
-    }   
+    }
     return filtered;
   }
-  
-  int get length { 
+
+  int get length {
     if (_length>=0)
       return _length;
     _length=0;
@@ -182,9 +182,10 @@ class PigeonMap implements Map<String, dynamic> {
     if (n<0) return noSuchAttribute(new _PigeonMapInvocation(new Symbol(key), [ifAbsent()]));
     var old=_values[n];
     if (identical(old, _undefined)) {
-      _values[n] = ifAbsent();
+      var newValue = ifAbsent();
+      _values[n] = newValue;
       _length=-1;
-      return null;
+      return newValue;
     }
     return old;
   }
@@ -197,9 +198,9 @@ class PigeonMap implements Map<String, dynamic> {
     _length=-1;
     if (identical(old, _undefined)) return null;
     return old;
-    
+
   }
-  
+
   String toString() {
     return Maps.mapToString(this);
   }
